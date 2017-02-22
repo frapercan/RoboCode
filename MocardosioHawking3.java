@@ -8,8 +8,9 @@ import java.awt.*;
 import java.awt.geom.Point2D;
 
 public class MocardosioHawking3 extends AdvancedRobot {
-	boolean Mov; //Variable que indica si vamos hacia adelante o hacia atras
-	Double pi = Math.PI;
+	double Mov = 1; //Variable que indica si vamos hacia adelante o hacia atras
+	double pi = Math.PI;
+	double randomness = Math.random();
 	public void run() {
 		
 		setBodyColor(Color.BLUE);
@@ -22,51 +23,65 @@ public class MocardosioHawking3 extends AdvancedRobot {
 		
 		do {
 	        turnRadarRightRadians(Double.POSITIVE_INFINITY);
+	        
 	    } while (true);
 	}
 
 
 //Cuando un enemigo está dentro del radar:
 	public void onScannedRobot(ScannedRobotEvent e) {
-		double absBearing=e.getHeadingRadians();//enemies absolute bearing
-		double gunTurnAmt;//amount to turn our gun
+		double RandomEnemyHeading = (e.getHeadingRadians() * Math.random())/10;
 		double distance = e.getDistance();
-		System.out.println(distance);
+	
+		System.out.println("velocidad :" + e.getVelocity());
+		
+		
+		if(distance < 150 && Math.abs(e.getVelocity()) > 4){
+			RandomEnemyHeading = RandomEnemyHeading/2;
+			
+		}
+		if(distance < 150 && Math.abs(e.getVelocity()) < 4){
+			RandomEnemyHeading = RandomEnemyHeading/10;
+			
+		}
+			
+		
+		//movimiento del cañon  hacia la derecha siguiendo al tanque enemigo con un pequeño offset random
+		setTurnGunRightRadians(Utils.normalRelativeAngle(getHeadingRadians() + e.getBearingRadians() - 
+			    getGunHeadingRadians()+RandomEnemyHeading));
+		
+		System.out.println(RandomEnemyHeading);
 	    setTurnRadarLeftRadians(getRadarTurnRemainingRadians());
 	    if (distance < 150){
-	    	fire(16);
+	    	setFire(16);
 	    }
 	    if (distance > 150 && distance < 300){
-	    	fire(4);
+	    	setFire(8);
 	    }
 	    
 	    if (distance > 300 && distance < 500){
-	    	fire(1);
+	    	setFire(5);
 	    }
-	    if (distance > 500 && distance < 700){
-	    	fire(0.5);
+	    if (distance > 500 ){
+	    	setFire(3);
 	    }
 	    
-		
-	
-	}	
-	
-	// Tras chocar con la pared, cambio de sentido!
-	public void onHitWall(HitWallEvent e) {
-		invertir();
-	}
-
-	//Cambiar sentido del movimiento
-	public void invertir() {
-		if (Mov) {
-			setBack(40000);
-			Mov = false;
-		} else {
-			setAhead(40000);
-			Mov = true;
+	    //movimiento en sentido oscilatorio cada 25 turnos, girando siempre en torno al enemigo + un angulo aleatorio
+	    setTurnRightRadians(e.getBearingRadians()+(pi/2) );
+		if (getTime() % 25 == 0) {
+			Mov *= -1;
+			randomness = Math.random();
+			setAhead(999 * Mov);
 		}
+		
 	}
-
+	    
+	
+	}    
+	    
+	
+	
+	
 
 	
-}
+
